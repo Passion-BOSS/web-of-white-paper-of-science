@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}科创白皮书{% endblock %}</title>
+<link rel="stylesheet" href="/static/css/style.css">
+    <!-- 修复FontAwesome链接 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <!-- 头部 - 只保留一个header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">
+                    <div class="logo-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>科创白皮书</h1>
+                        <p>大连理工大学创新创业竞赛指南</p>
+                    </div>
+                </a>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">首页</a></li>
+                <li><a href="{{ url_for('categories') }}" class="{% if request.endpoint == 'categories' %}active{% endif %}">问题分类</a></li>
+                <li><a href="{{ url_for('ask') }}" class="{% if request.endpoint == 'ask' %}active{% endif %}">我要提问</a></li>
+                <!-- 游客查询入口 - 修复格式 -->
+                <li><a href="{{ url_for('guest_inbox') }}" class="{% if request.endpoint == 'guest_inbox' %}active{% endif %}">查询回复</a></li>
+
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <li><a href="{{ url_for('admin') }}" class="{% if request.endpoint == 'admin' %}active{% endif %}">管理面板</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="auth-buttons">
+                {% if current_user.is_authenticated %}
+                    <span class="user-welcome">欢迎, {{ current_user.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline">
+                        <i class="fas fa-sign-out-alt"></i>退出
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline">
+                        <i class="fas fa-sign-in-alt"></i>登录
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i>注册
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- 消息提示 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages container">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                        <button class="flash-close">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- 主内容区 -->
+    <div class="container main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- 底部 - 只保留一个footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5>科创白皮书</h5>
+                    <p>大连理工大学创新创业竞赛一站式指南，整合高频问题与解决方案，助力学生科创之路。</p>
+                </div>
+
+                <div class="footer-section">
+                    <h5>快速链接</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">首页</a></li>
+                        <li><a href="{{ url_for('categories') }}">问题分类</a></li>
+                        <li><a href="{{ url_for('ask') }}">我要提问</a></li>
+                        <li><a href="{{ url_for('guest_inbox') }}">查询回复</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="copyright">
+                <p>&copy; 2026 大连理工大学大工书院科创白皮书 | 仅供内部使用</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 脚本 -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!-- 删除 index.html 的头部，让 index.html 继承 base.html -->
+{% extends "base.html" %}
+
+{% block title %}首页 - 科创白皮书{% endblock %}
+
+{% block content %}
+
+    <!-- 搜索区域 -->
+    <div class="hero">
+        <h2>科创白皮书 · 一站式解答平台</h2>
+        <p>整合大连理工大学创新创业竞赛高频问题，提供从组队到结题的完整指南，结合学长学姐的"焚诀"经验，助你顺利参与大创、挑战杯、互联网+等科创比赛。</p>
+
+        <div class="search-box">
+            <form action="{{ url_for('categories') }}" method="GET">
+                <input type="text" name="search" placeholder="搜索问题，例如：如何找指导老师、大创申报书怎么写、队友怎么找...">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="key-indicator">
+            管理员注册秘钥：<strong>kcbps</strong> (仅限科创白皮书内部管理成员)
+        </div>
+    </div>
+
+    <!-- 问题分类 -->
+    <div class="categories" id="categories">
+        <div class="section-title">
+            <h3>问题分类</h3>
+            <div class="section-title-line"></div>
+        </div>
+
+        <div class="categories-grid">
+            {% for category in categories %}
+            <div class="category-card" data-category="{{ category.slug }}"
+                  onclick="window.location.href='{{ url_for('categories') }}?category={{ category.slug }}'">
+                <div class="category-icon">
+                    <i class="fas {{ category.icon }}"></i>
+                </div>
+                <h4>{{ category.name }}</h4>
+                <p>{{ category.description }}</p>
+                <div class="question-count">{{ category.question_count }}个问题</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+   <!-- 嘉宾展示 -->
+ <!-- ************** 在此插入“科创榜样”入口栏 ************** -->
+    <div class="guests-entry-section" id="guests-entry">
+         <div style="color: white; text-align: center; font-size: 24px;">
+        测试：如果看到这个红色区块，说明HTML加载了</div>
+        <div class="section-title">
+            <h3><i class="fas fa-user-graduate"></i> 科创榜样</h3>
+            <div class="section-title-line"></div>
+        </div>
+        <p class="section-subtitle">向优秀的学长学姐学习，汲取宝贵的竞赛经验与成功路径。</p>
+
+        <div class="guests-entry-grid">
+            <a href="{{ url_for('guests') }}" class="guest-entry-card">
+                <div class="guest-entry-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h4>聆听前辈经验</h4>
+                <p>了解刘馨、曲云鹏等优秀学长学姐的科创旅程与获奖心得。</p>
+                <span class="entry-link">探索榜样力量 <i class="fas fa-arrow-right"></i></span>
+            </a>
+
+            <a href="{{ url_for('guests') }}" class="guest-entry-card">
+                <div class="guest-entry-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h4>解析成功案例</h4>
+                <p>揭秘“挑战杯”、“互联网+”等顶级赛事的获奖项目背后故事。</p>
+                <span class="entry-link">查看获奖详情 <i class="fas fa-arrow-right"></i></span>
+            </a>
+
+            <a href="{{ url_for('guests') }}" class="guest-entry-card">
+                <div class="guest-entry-icon">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <h4>获取资源指引</h4>
+                <p>从选题、组队到答辩，获取过来人的一手资源与避坑指南。</p>
+                <span class="entry-link">汲取实用经验 <i class="fas fa-arrow-right"></i></span>
+            </a>
+        </div>
+    </div>
+    <!-- ************** 插入结束 ************** -->
+    <!-- 科创流程 -->
+    <div class="process-flow" id="process">
+        <div class="section-title">
+            <h3>科创全流程</h3>
+            <div class="section-title-line"></div>
+        </div>
+
+        <div class="process-steps">
+            {% for step in process_steps %}
+            <div class="process-step" onclick="showStepDetail({{ step.step_number }})">
+                <div class="step-number">{{ step.step_number }}</div>
+                <h5>{{ step.title }}</h5>
+                <p>{{ step.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <button class="btn btn-primary" id="viewProcessDetail">
+                <i class="fas fa-list-ol"></i>查看详细流程指南
+            </button>
+        </div>
+    </div>
+
+    <!-- 高频问题列表 -->
+    <div class="faq-list" id="faq">
+        <div class="faq-header">
+            <h4>高频问题解答</h4>
+            <a href="{{ url_for('ask') }}" class="btn btn-secondary">
+                <i class="fas fa-question-circle"></i>我要提问
+            </a>
+        </div>
+
+        <div class="faq-items">
+            {% for question in featured_questions %}
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h5>{{ question.title }}</h5>
+                    <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    {{ question.answer|safe }}
+                    <div style="margin-top: 1rem; color: var(--gray-dark); font-size: 0.9rem;">
+                        <i class="far fa-eye"></i> {{ question.views }}次浏览 |
+                        分类: {{ question.category_ref.name if question.category_ref else '未知' }}
+                    </div>
+                    <div style="margin-top: 0.5rem;">
+                        <a href="{{ url_for('detail', question_id=question.id) }}" class="btn-read-more">查看详情</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 人工咨询 -->
+    <div class="consultation" id="consult">
+        <h4>没有找到答案？</h4>
+        <p>我们的人工咨询入口随时为您服务。提交您的问题，科创白皮书的学长学姐将在24小时内为您解答，您的问题也可能被收录到白皮书中，帮助更多同学。</p>
+        <a href="{{ url_for('ask') }}" class="btn btn-primary">
+            <i class="fas fa-headset"></i>进入人工咨询
+        </a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // 显示步骤详情
+        function showStepDetail(stepNumber) {
+            const stepDetails = {
+                1: "研究比赛规则、时间、要求。重点关注比赛官方网站和学校创新创业学院通知。",
+                2: "关注通知、准备报名材料。注意报名截止时间，提前准备所需材料。",
+                3: "寻找队友、确定分工。寻找不同专业背景的队友，形成优势互补。",
+                4: "联系指导老师、确定方向。提前了解老师研究方向，准备好项目构思。",
+                5: "头脑风暴、确定项目方向。选题要兼具创新性和可行性，避免过大或过小。",
+                6: "申报书、PPT等材料准备。突出项目创新点和团队优势，注意格式规范。",
+                7: "预演答辩、优化展示。多次演练，控制时间，准备好问答环节。",
+                8: "提交材料、参加比赛。提前提交，留出修改时间，注意备份。"
+            };
+
+            const stepTitles = [
+                '了解比赛',
+                '报名信息',
+                '组建团队',
+                '邀请导师',
+                '确定选题',
+                '撰写材料',
+                '模拟答辩',
+                '最终提交'
+            ];
+
+            const detail = stepDetails[stepNumber];
+            const title = stepTitles[stepNumber - 1];
+
+            // 显示模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4>${title} - 详细指南</h4>
+                        <button class="close-modal" onclick="this.parentElement.parentElement.parentElement.style.display='none'">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>${detail}</p>
+                        <div style="margin-top: 1.5rem; padding: 1rem; background-color: var(--light-blue); border-radius: var(--border-radius);">
+                            <p style="margin: 0; color: var(--primary-blue); font-weight: 600;">
+                                <i class="fas fa-lightbulb"></i> 提示：更多详细指南将在后续版本中提供
+                            </p>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.style.display='none'">关闭</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // 点击模态框外部关闭
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // 查看详细流程按钮
+        document.getElementById('viewProcessDetail')?.addEventListener('click', function() {
+              window.location.href = "{{ url_for('process_guide') }}";
+            alert('详细流程页面正在开发中，将包含每一步的具体操作指南、时间节点和注意事项。');
+        });
+
+        // FAQ展开收起
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', function() {
+                const faqItem = this.closest('.faq-item');
+                const toggleIcon = this.querySelector('.faq-toggle i');
+
+                faqItem.classList.toggle('active');
+
+                if (faqItem.classList.contains('active')) {
+                    toggleIcon.classList.remove('fa-chevron-down');
+                    toggleIcon.classList.add('fa-chevron-up');
+                } else {
+                    toggleIcon.classList.remove('fa-chevron-up');
+                    toggleIcon.classList.add('fa-chevron-down');
+                }
+            });
+        });
+
+        // 分类卡片点击
+        document.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const category = this.getAttribute('data-category');
+                window.location.href = "{{ url_for('categories') }}?category=" + category;
+            });
+        });
+
+        // 搜索框回车事件
+        document.querySelector('.search-box input')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.closest('form').submit();
+            }
+        });
+    </script>
+{% endblock %}

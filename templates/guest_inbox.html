@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查询回复 - 科创白皮书</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 头部 -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">
+                    <div class="logo-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>科创白皮书</h1>
+                        <p>大连理工大学创新创业竞赛指南</p>
+                    </div>
+                </a>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}">首页</a></li>
+                <li><a href="{{ url_for('categories') }}">问题分类</a></li>
+                <li><a href="{{ url_for('ask') }}">我要提问</a></li>
+                <li><a href="{{ url_for('guest_inbox') }}" class="active">查询回复</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <div class="container main-content">
+        <!-- 查询表单 -->
+        <div class="query-form" style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+            <h3 style="color: #1a6dbb; margin-bottom: 1.5rem;"><i class="fas fa-search"></i> 查询回复</h3>
+
+            <form method="POST" action="{{ url_for('guest_inbox') }}">
+                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #343a40;">
+                            <i class="fas fa-envelope"></i> 邮箱地址 *
+                        </label>
+                        <input type="email" id="email" name="email"
+                               value="{{ email if email else '' }}"
+                               placeholder="请输入您的邮箱地址（如：123456789@qq.com）"
+                               required
+                               style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e1e5eb; border-radius: 4px; font-size: 1rem;">
+                    </div>
+
+                    <div style="min-width: 200px;">
+                        <label for="category" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #343a40;">
+                            <i class="fas fa-filter"></i> 问题分类
+                        </label>
+                        <select id="category" name="category" style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e1e5eb; border-radius: 4px; font-size: 1rem;">
+                            <option value="">全部分类</option>
+                            <option value="basic" {% if request.form.get('category') == 'basic' %}selected{% endif %}>基础知识</option>
+                            <option value="team" {% if request.form.get('category') == 'team' %}selected{% endif %}>团队与组队</option>
+                            <option value="mentor" {% if request.form.get('category') == 'mentor' %}selected{% endif %}>指导老师</option>
+                            <option value="topic" {% if request.form.get('category') == 'topic' %}selected{% endif %}>选题与创新</option>
+                            <option value="application" {% if request.form.get('category') == 'application' %}selected{% endif %}>申报与材料</option>
+                            <option value="process" {% if request.form.get('category') == 'process' %}selected{% endif %}>流程与时间</option>
+                            <option value="result" {% if request.form.get('category') == 'result' %}selected{% endif %}>成果与获奖</option>
+                            <option value="other" {% if request.form.get('category') == 'other' %}selected{% endif %}>其他问题</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <button type="submit" style="background-color: #1a6dbb; color: white; border: none; padding: 0.8rem 2rem; border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-search"></i> 查询回复
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div style="margin-top: 1rem; color: #6c757d; font-size: 0.9rem;">
+                <p><i class="fas fa-info-circle"></i> 提示：请输入您提问时使用的邮箱地址，即可查看对应的回复。</p>
+            </div>
+        </div>
+
+        <!-- 查询结果 -->
+        {% if has_searched %}
+        <div class="query-results">
+            {% if questions and questions|length > 0 %}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h4 style="color: #1a6dbb;">
+                    <i class="fas fa-list"></i> 查询结果 ({{ questions|length }}条)
+                </h4>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span style="font-size: 0.9rem; color: #6c757d;">状态筛选：</span>
+                    <button class="filter-btn active" data-status="all" style="padding: 0.3rem 0.8rem; background: #1a6dbb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">全部</button>
+                    <button class="filter-btn" data-status="pending" style="padding: 0.3rem 0.8rem; background: #f5f7fa; color: #6c757d; border: 1px solid #e1e5eb; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">待处理</button>
+                    <button class="filter-btn" data-status="answered" style="padding: 0.3rem 0.8rem; background: #f5f7fa; color: #6c757d; border: 1px solid #e1e5eb; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">已回复</button>
+                </div>
+            </div>
+
+            <!-- 问题列表 -->
+            <div id="questions-list">
+                {% for question in questions %}
+                <div class="user-question-item" data-status="{{ question.status }}"
+                     style="background: white; padding: 1.5rem; margin: 1rem 0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; color: #1a6dbb;">{{ question.title }}</h4>
+                        <span style="padding: 0.3rem 0.8rem; border-radius: 4px; background-color: {% if question.status == 'answered' %}#d4edda{% else %}#fff3cd{% endif %}; color: {% if question.status == 'answered' %}#155724{% else %}#856404{% endif %}; font-size: 0.85rem; font-weight: 600;">
+                            {% if question.status == 'pending' %}待处理
+                            {% elif question.status == 'answered' %}已回复
+                            {% else %}{{ question.status }}{% endif %}
+                        </span>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <p>{{ question.content }}</p>
+                        <div style="display: flex; gap: 1.5rem; color: #6c757d; font-size: 0.9rem; margin-top: 1rem;">
+                            <span><i class="far fa-envelope"></i> {{ question.user_email }}</span>
+                            <span><i class="far fa-calendar"></i> {{ question.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                            <span><i class="far fa-folder"></i> {{ question.category }}</span>
+                        </div>
+                    </div>
+
+                    <!-- 重点：显示管理员回复 -->
+                    {% if question.answer %}
+                    <div style="background-color: #e8f4ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #1a6dbb; margin-top: 1rem;">
+                        <h5 style="color: #1a6dbb; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-reply"></i> 管理员回复：
+                        </h5>
+                        <p style="margin: 0; line-height: 1.6; white-space: pre-wrap;">{{ question.answer }}</p>
+                        {% if question.answered_at %}
+                        <div style="color: #6c757d; font-size: 0.85rem; margin-top: 0.5rem; text-align: right;">
+                            <i class="far fa-clock"></i> 回复时间: {{ question.answered_at.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- 无结果提示 -->
+            <div style="text-align: center; padding: 4rem 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <i class="fas fa-search" style="font-size: 3rem; color: #e1e5eb; margin-bottom: 1.5rem;"></i>
+                <h4 style="color: #343a40; margin-bottom: 1rem;">未找到相关记录</h4>
+                <p style="color: #6c757d; margin-bottom: 2rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+                    没有找到与邮箱 <strong>{{ email }}</strong> 相关的提问记录。
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <a href="{{ url_for('ask') }}" style="background-color: #1a6dbb; color: white; text-decoration: none; padding: 0.8rem 1.5rem; border-radius: 4px; font-weight: 600;">
+                        <i class="fas fa-question-circle"></i> 我要提问
+                    </a>
+                    <button onclick="history.back()" style="background-color: #f5f7fa; color: #6c757d; border: 1px solid #e1e5eb; padding: 0.8rem 1.5rem; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-redo"></i> 重新查询
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 底部 -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5>科创白皮书</h5>
+                    <p>大连理工大学创新创业竞赛一站式指南，整合高频问题与解决方案，助力学生科创之路。</p>
+                </div>
+
+                <div class="footer-section">
+                    <h5>快速链接</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">首页</a></li>
+                        <li><a href="{{ url_for('categories') }}">问题分类</a></li>
+                        <li><a href="{{ url_for('ask') }}">我要提问</a></li>
+                        <li><a href="{{ url_for('guest_inbox') }}">查询回复</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript脚本 -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 筛选按钮功能
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const questionItems = document.querySelectorAll('.user-question-item');
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const status = this.dataset.status;
+
+                // 更新按钮状态
+                filterButtons.forEach(b => {
+                    b.style.backgroundColor = '#f5f7fa';
+                    b.style.color = '#6c757d';
+                    b.style.border = '1px solid #e1e5eb';
+                });
+
+                this.style.backgroundColor = '#1a6dbb';
+                this.style.color = 'white';
+                this.style.border = 'none';
+
+                // 筛选问题
+                questionItems.forEach(item => {
+                    if (status === 'all') {
+                        item.style.display = 'block';
+                    } else {
+                        const itemStatus = item.dataset.status;
+                        item.style.display = itemStatus === status ? 'block' : 'none';
+                    }
+                });
+            });
+        });
+
+        // 自动展开有回复的问题
+        document.querySelectorAll('.user-question-item[data-status="answered"]').forEach(item => {
+            const answerDiv = item.querySelector('.answer');
+            if (answerDiv) {
+                answerDiv.style.display = 'block';
+            }
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}科创全流程指南 - 科创白皮书{% endblock %}
+
+{% block content %}
+<div class="process-guide-page">
+    <div class="process-guide-header">
+        <h2><i class="fas fa-road"></i> 科创全流程指南</h2>
+        <p>从零开始参与大创、挑战杯、互联网+的完整步骤</p>
+    </div>
+
+    <div class="process-steps-detailed">
+        {% for step in process_steps %}
+        <div class="process-step-detailed">
+            <div class="step-header">
+                <div class="step-number">{{ step.step_number }}</div>
+                <div class="step-info">
+                    <h3>{{ step.title }}</h3>
+                    <p class="step-description">{{ step.description }}</p>
+                </div>
+            </div>
+            <div class="step-content">
+                <div class="step-tips">
+                    <h4><i class="fas fa-lightbulb"></i> 温馨提示：</h4>
+                    <p>{{ step.tips }}</p>
+                </div>
+                <div class="step-actions">
+                    <h4><i class="fas fa-tasks"></i> 具体要做：</h4>
+                    <ul>
+                        {% if step.step_number == 1 %}
+                        <li>访问学校创新创业学院官网</li>
+                        <li>研究比赛官方网站和往届作品</li>
+                        <li>参加学校举办的说明会</li>
+                        {% elif step.step_number == 2 %}
+                        <li>准备个人基本信息材料</li>
+                        <li>了解报名截止时间</li>
+                        <li>熟悉报名系统操作</li>
+                        {% elif step.step_number == 3 %}
+                        <li>寻找3-5名不同专业的队友</li>
+                        <li>明确团队分工和职责</li>
+                        <li>建立团队沟通机制</li>
+                        {% elif step.step_number == 4 %}
+                        <li>提前了解老师研究方向</li>
+                        <li>准备初步的项目构思</li>
+                        <li>通过邮件或课后时间联系</li>
+                        {% elif step.step_number == 5 %}
+                        <li>头脑风暴，收集创意</li>
+                        <li>评估项目的可行性和创新性</li>
+                        <li>确定最终选题方向</li>
+                        {% elif step.step_number == 6 %}
+                        <li>撰写申报书、商业计划书</li>
+                        <li>制作答辩PPT</li>
+                        <li>准备项目演示材料</li>
+                        {% elif step.step_number == 7 %}
+                        <li>组织3-5次模拟答辩</li>
+                        <li>控制展示时间在5-8分钟</li>
+                        <li>准备常见问题回答</li>
+                        {% elif step.step_number == 8 %}
+                        <li>提前1-2天提交材料</li>
+                        <li>检查材料完整性</li>
+                        <li>做好答辩现场准备</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="process-guide-actions">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回首页
+        </a>
+        <a href="{{ url_for('ask') }}" class="btn btn-primary">
+            <i class="fas fa-question-circle"></i> 我还有疑问
+        </a>
+    </div>
+</div>
+{% endblock %}

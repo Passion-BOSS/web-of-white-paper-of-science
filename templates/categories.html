@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问题分类 - 科创白皮书</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"></head>
+<body>
+    <!-- 头部 -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">
+                    <div class="logo-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>科创白皮书</h1>
+                        <p>大连理工大学创新创业竞赛指南</p>
+                    </div>
+                </a>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}">首页</a></li>
+                <li><a href="{{ url_for('categories') }}" class="active">问题分类</a></li>
+                <li><a href="{{ url_for('ask') }}">我要提问</a></li>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <li><a href="{{ url_for('admin') }}">管理面板</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="auth-buttons">
+                {% if current_user.is_authenticated %}
+                    <span class="user-welcome">欢迎, {{ current_user.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline">
+                        <i class="fas fa-sign-out-alt"></i>退出
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline">
+                        <i class="fas fa-sign-in-alt"></i>登录
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i>注册
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- 消息提示 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages container">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                        <button class="flash-close" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- 主内容区 -->
+    <div class="container main-content">
+        <!-- 分类导航 -->
+        <div class="categories-nav">
+            <div class="section-title">
+                <h3>问题分类</h3>
+                <div class="section-title-line"></div>
+            </div>
+
+            <div class="category-tabs">
+                <a href="{{ url_for('categories') }}" class="category-tab {% if not current_category %}active{% endif %}">
+                    全部问题
+                </a>
+                {% for category in categories %}
+                <a href="{{ url_for('categories') }}?category={{ category.slug }}"
+                   class="category-tab {% if current_category == category.slug %}active{% endif %}">
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-box" style="max-width: 600px; margin: 2rem auto;">
+                <form action="{{ url_for('categories') }}" method="GET">
+                    <input type="text" name="search" value="{{ search_query or '' }}" placeholder="搜索问题...">
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>  <!-- 闭合 categories-nav div -->
+
+        <!-- 问题列表 -->
+       <div class="faq-list">
+    {% if search_query %}
+    <div class="search-results-header">
+        <h4>搜索"{{ search_query }}"的结果 ({{ questions|length }}条)</h4>
+    </div>
+    {% endif %}
+
+    {% if questions %}
+        <div class="faq-header">
+            <h4>{% if search_query %}搜索结果{% elif current_category %}分类: {{ current_category }}{% else %}所有问题{% endif %} ({{ questions|length }}个)</h4>
+        </div>
+
+        <div class="faq-items">
+            {% for question in questions %}
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h5>{{ question.title }}</h5>
+                    <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    {% if question.answer %}
+                        {{ question.answer|safe }}
+                    {% else %}
+                        <p>暂无回答</p>
+                    {% endif %}
+                    <div style="margin-top: 1rem; color: var(--gray-dark); font-size: 0.9rem;">
+                        <i class="far fa-eye"></i> {{ question.views }}次浏览 |
+                        分类: {{ question.category_ref.name if question.category_ref else '未知' }}
+                    </div>
+                    <div style="margin-top: 0.5rem;">
+                        <a href="{{ url_for('detail', question_id=question.id) }}" class="btn-read-more">查看详情</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-results">
+            <i class="fas fa-search" style="font-size: 3rem; color: var(--gray-medium); margin-bottom: 1rem;"></i>
+            <h4>暂无相关问题</h4>
+            <p>{% if search_query %}未找到与"{{ search_query }}"相关的问题{% else %}该分类下暂时没有问题{% endif %}</p>
+            <a href="{{ url_for('ask') }}" class="btn btn-primary">我要提问</a>
+        </div>
+    {% endif %}
+</div>
+    </div>  <!-- 闭合 main-content container -->
+
+    <!-- 底部 -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5>科创白皮书</h5>
+                    <p>大连理工大学创新创业竞赛一站式指南，整合高频问题与解决方案，助力学生科创之路。</p>
+                </div>
+
+                <div class="footer-section">
+                    <h5>快速链接</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">首页</a></li>
+                        <li><a href="{{ url_for('categories') }}">问题分类</a></li>
+                        <li><a href="{{ url_for('ask') }}">我要提问</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h5>主要比赛</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">大学生创新创业训练计划</a></li>
+                        <li><a href="#">"挑战杯"全国大学生系列竞赛</a></li>
+                        <li><a href="#">"互联网+"大学生创新创业大赛</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h5>联系我们</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">大连理工大学创新创业学院</a></li>
+                        <li><a href="#">科创白皮书-学姐学长邮箱: kcb@dlut.edu.cn</a></li>
+                        <li><a href="#">微信公众号: DUT科创白皮书</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="copyright">
+                <p>&copy; 2026 大连理工大学大工书院科创白皮书 | 设计：大工书院6人小组 | 仅供内部使用</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# IDE和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统文件
+Thumbs.db
+Desktop.ini
+
+# 编译文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# 环境文件
+.env
+venv/
+env/
+
+# 其他
+*.log
+*.tmp

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员面板 - 科创白皮书</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"></head>
+<body>
+    <!-- 头部 -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">
+                    <div class="logo-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>科创白皮书</h1>
+                        <p>大连理工大学创新创业竞赛指南</p>
+                    </div>
+                </a>
+            </div>
+            
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}">首页</a></li>
+                <li><a href="{{ url_for('categories') }}">问题分类</a></li>
+                <li><a href="{{ url_for('ask') }}">我要提问</a></li>
+                <li><a href="{{ url_for('admin') }}" class="active">管理面板</a></li>
+            </ul>
+            
+            <div class="auth-buttons">
+                {% if current_user.is_authenticated %}
+                    <span class="user-welcome">欢迎, {{ current_user.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline">
+                        <i class="fas fa-sign-out-alt"></i>退出
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline">
+                        <i class="fas fa-sign-in-alt"></i>登录
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i>注册
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+    
+    <!-- 消息提示 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages container">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                        <button class="flash-close" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- 主内容区 -->
+    <div class="container main-content">
+        <div class="admin-page">
+            <div class="admin-header">
+                <h2><i class="fas fa-cogs"></i> 管理员面板</h2>
+                <p>管理问题库，编辑回答，查看用户提问</p>
+            </div>
+            
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="user-questions">用户提问 ({{ user_questions|length }})</button>
+                <button class="admin-tab" data-tab="faq-manage">FAQ管理 ({{ faq_questions|length }})</button>
+                <button class="admin-tab" data-tab="add-question">添加新问题</button>
+            </div>
+            
+            <!-- 用户提问管理 -->
+            <div class="admin-tab-content active" id="user-questions">
+                <div class="admin-controls">
+                    <div class="filter-controls">
+                        <button class="btn btn-secondary filter-btn active" data-status="all">全部</button>
+                        <button class="btn btn-secondary filter-btn" data-status="pending">待处理</button>
+                        <button class="btn btn-secondary filter-btn" data-status="answered">已回复</button>
+                    </div>
+                </div>
+                
+                <div class="user-questions-list">
+                    {% if user_questions %}
+                        {% for question in user_questions %}
+                        <div class="user-question-item" data-status="{{ question.status }}" data-id="{{ question.id }}">
+                            <div class="user-question-header">
+                                <h4>{{ question.title }}</h4>
+                                <span class="question-status status-{{ question.status }}">
+                                    {% if question.status == 'pending' %}待处理
+                                    {% elif question.status == 'answered' %}已回复
+                                    {% else %}{{ question.status }}{% endif %}
+                                </span>
+                            </div>
+
+                            <div class="user-question-content">
+                                <p>{{ question.content }}</p>
+                                <div class="question-meta">
+                                    <span><i class="far fa-user"></i> {{ question.user.email if question.user else '匿名用户' }}</span>
+                                    <span><i class="far fa-calendar"></i> {{ question.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                    <span><i class="far fa-folder"></i> {{ question.category }}</span>
+                                </div>
+
+                                {% if question.answer %}
+                                <div class="question-answer">
+                                    <h5><i class="fas fa-reply"></i> 管理员回复：</h5>
+                                    <p>{{ question.answer }}</p>
+                                    <div class="answer-meta">
+                                        <span>回复时间: {{ question.answered_at.strftime('%Y-%m-%d %H:%M') if question.answered_at else '未回复' }}</span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="user-question-actions">
+                                {% if question.status == 'pending' %}
+                                <button class="btn btn-primary reply-btn" data-id="{{ question.id }}">
+                                    <i class="fas fa-reply"></i> 回复
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-danger delete-question-btn" data-id="{{ question.id }}">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-data">
+                            <p>暂无用户提问</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- FAQ管理 -->
+            <div class="admin-tab-content" id="faq-manage">
+                <div class="admin-controls">
+                    <button class="btn btn-primary" id="addFaqBtn">
+                        <i class="fas fa-plus-circle"></i> 添加FAQ
+                    </button>
+                </div>
+
+                <table class="questions-table">
+                    <thead>
+                        <tr>
+                            <th width="5%">ID</th>
+                            <th width="35%">问题</th>
+                            <th width="15%">分类</th>
+                            <th width="10%">浏览量</th>
+                            <th width="15%">状态</th>
+                            <th width="20%">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                       <!-- 确保所有tr标签正确闭合 -->
+{% for question in faq_questions %}
+<tr>
+    <td>{{ question.id }}</td>
+    <td>{{ question.title }}</td>
+    <td>{{ question.category_ref.name if question.category_ref else '未知' }}</td>
+    <td>{{ question.views }}</td>
+    <td>
+        <span class="status-badge {% if question.is_featured %}featured{% else %}normal{% endif %}">
+            {% if question.is_featured %}推荐{% else %}普通{% endif %}
+        </span>
+    </td>
+    <td>
+        <button class="btn btn-sm btn-primary view-faq-btn"
+                onclick="window.location.href='{{ url_for('detail', question_id=question.id) }}'">
+            查看
+        </button>
+        {% if current_user.is_admin %}
+        <button class="btn btn-sm btn-warning edit-faq-btn" data-id="{{ question.id }}">
+            编辑
+        </button>
+        <button class="btn btn-sm btn-danger delete-faq-btn" data-id="{{ question.id }}">
+            删除
+        </button>
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 添加新问题 -->
+            <div class="admin-tab-content" id="add-question">
+                <div class="add-question-form">
+                    <div class="form-group">
+                        <label for="faq-title">问题标题 *</label>
+                        <input type="text" id="faq-title" placeholder="请输入问题标题">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="faq-content">问题描述 *</label>
+                        <textarea id="faq-content" rows="3" placeholder="请输入问题描述"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="faq-answer">问题解答 *</label>
+                        <textarea id="faq-answer" rows="6" placeholder="请输入详细解答，支持HTML格式"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="faq-category">分类 *</label>
+                            <select id="faq-category">
+                                <option value="">选择分类</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="faq-featured">推荐状态</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="faq-featured">
+                                <label for="faq-featured">设为推荐问题</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-primary" id="submit-faq">
+                            <i class="fas fa-save"></i> 保存问题
+                        </button>
+                        <button class="btn btn-secondary" id="reset-faq">
+                            <i class="fas fa-redo"></i> 重置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部 -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5>科创白皮书</h5>
+                    <p>大连理工大学创新创业竞赛一站式指南，整合高频问题与解决方案，助力学生科创之路。</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h5>快速链接</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">首页</a></li>
+                        <li><a href="{{ url_for('categories') }}">问题分类</a></li>
+                        <li><a href="{{ url_for('ask') }}">我要提问</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h5>主要比赛</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">大学生创新创业训练计划</a></li>
+                        <li><a href="#">"挑战杯"全国大学生系列竞赛</a></li>
+                        <li><a href="#">"互联网+"大学生创新创业大赛</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h5>联系我们</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">大连理工大学创新创业学院</a></li>
+                        <li><a href="#">科创部邮箱: kcb@dlut.edu.cn</a></li>
+                        <li><a href="#">微信公众号: DUT科创白皮书</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2026 大连理工大学大工书院科创白皮书 | 设计：大工书院6人小组 | 仅供内部使用</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- 模态框容器 -->
+    <div id="modal-container"></div>
+    
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script>
+        // 标签页切换
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.admin-tab');
+            const tabContents = document.querySelectorAll('.admin-tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    // 更新标签页状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 显示对应内容
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === tabId) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // 用户提问筛选
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const status = this.dataset.status;
+                    
+                    // 更新按钮状态
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 筛选问题
+                    const questions = document.querySelectorAll('.user-question-item');
+                    questions.forEach(question => {
+                        if (status === 'all') {
+                            question.style.display = 'block';
+                        } else {
+                            const questionStatus = question.dataset.status;
+                            question.style.display = questionStatus === status ? 'block' : 'none';
+                        }
+                    });
+                });
+            });
+            
+            // 添加FAQ按钮点击切换到添加页面
+            document.getElementById('addFaqBtn')?.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                document.querySelector('[data-tab="add-question"]').classList.add('active');
+                document.getElementById('add-question').classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
